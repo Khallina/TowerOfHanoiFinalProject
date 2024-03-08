@@ -6,6 +6,8 @@ import java.awt.event.MouseListener;
 
 public class TowersOfHanoi extends JFrame implements MouseListener {
     private Peg[] pegs = new Peg[3];
+    private SoundPlayer goodSound = new SuccessClick();
+    private SoundPlayer badSound = new FailClick();
     public static void main(String[] args) {
         new TowersOfHanoi().setVisible(true);
     }
@@ -53,8 +55,12 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
                         peg.removeTopDisk();
                         nextPeg.addDisk(topDisk);
                         repaint();
+                       // goodSound.play();
+                        return;
                     }
                 }
+               // badSound.play();
+                return;
             }
         }
     }
