@@ -31,6 +31,9 @@ public class Peg {
             disk.draw(g);
         }
     }
+    public int getDiskCount() {
+        return disks.size();
+    }
 
     public boolean isEmpty() {
         return disks.isEmpty();

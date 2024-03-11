@@ -1,13 +1,20 @@
-import javax.swing.JFrame;
+import javax.swing.*;
 import java.awt.Graphics;
 import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class TowersOfHanoi extends JFrame implements MouseListener {
     private Peg[] pegs = new Peg[3];
-    private SoundPlayer goodSound = new SuccessClick();
-    private SoundPlayer badSound = new FailClick();
+    private int moves = 0;
+    private long startTime;
+    private JLabel movesLabel;
+    private JLabel timerLabel;
+    private Timer timer;
+    //private SoundPlayer goodSound = new SuccessClick();
+    //private SoundPlayer badSound = new FailClick();
     public static void main(String[] args) {
         new TowersOfHanoi().setVisible(true);
     }
@@ -29,8 +36,30 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
             Color color = new Color((int)(Math.random() * 0x1000000));
             pegs[0].addDisk(new Disk(i + 1, color, 0, 0, 60 + i * 10, 20));
         }
-    }
 
+        movesLabel = new JLabel("Moves: " + moves);
+        movesLabel.setBounds(50, 50, 100, 20);
+        add(movesLabel);
+
+        timerLabel = new JLabel("Time: 0s");
+        timerLabel.setBounds(650, 50, 100, 20);
+        add(timerLabel);
+
+        startTime = System.currentTimeMillis();
+        startTimer();
+        //repaint();
+    }
+    private void startTimer() {
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                timerLabel.setText("Time: " + (elapsedTime / 1000) + "s");
+                repaint();
+            }
+        }, 0, 1000);
+    }
     @Override
     public void paint(Graphics g) {
         super.paint(g);
@@ -54,7 +83,13 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
                     if (nextPeg.isEmpty() || topDisk.getSize() < nextPeg.peekTopDisk().getSize()) {
                         peg.removeTopDisk();
                         nextPeg.addDisk(topDisk);
+                        moves++;
+                        movesLabel.setText("Moves: " + moves);
                         repaint();
+                        if (nextPegIndex == 2 && nextPeg.getDiskCount() == 6) {
+                            timer.cancel();
+                            JOptionPane.showMessageDialog(null, "Congratulations! You completed the game in " + (System.currentTimeMillis() - startTime) / 1000 + " seconds with " + moves + " moves.");
+                        }
                        // goodSound.play();
                         return;
                     }
