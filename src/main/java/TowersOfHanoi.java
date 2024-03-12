@@ -15,8 +15,8 @@ import java.util.TimerTask;
     private JLabel timerLabel;
     private Timer timer;
 
-     //private SoundPlayer goodSound = new SuccessClick();
-    //private SoundPlayer badSound = new FailClick();
+     private SoundPlayer goodSound = new SuccessClick();
+    private SoundPlayer badSound = new FailClick();
     public static void main(String[] args) {
         new TowersOfHanoi().setVisible(true);
     }
@@ -76,6 +76,8 @@ import java.util.TimerTask;
     @Override
     public void paint(Graphics g) {
         super.paint(g);
+        Graphics2D graphics2D = (Graphics2D) g;
+        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         for (Peg peg : pegs) {
             peg.draw(g);
         }
@@ -105,11 +107,11 @@ import java.util.TimerTask;
                                     LanguageManager.getMessage("game.congratulations") + " " +
                                             (System.currentTimeMillis() - startTime) / 1000 + " seconds with " + moves + " moves.");
                         }
-                        // goodSound.play();
+                         goodSound.play();
                         return;
                     }
                 }
-                // badSound.play();
+                 badSound.play();
                 return;
             }
         }
