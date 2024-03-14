@@ -1,9 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -17,6 +14,24 @@ import java.util.TimerTask;
 
      private SoundPlayer goodSound = new SuccessClick();
     private SoundPlayer badSound = new FailClick();
+
+     private final Color[][] colorThemes = {
+             // Warm colors theme
+             {new Color(255, 102, 102), new Color(255, 153, 153), new Color(255, 204, 153),
+                     new Color(255, 255, 153), new Color(255, 204, 153), new Color(255, 153, 153)},
+
+             // Cool colors theme
+             {new Color(102, 178, 255), new Color(153, 204, 255), new Color(153, 255, 255),
+                     new Color(204, 255, 255), new Color(153, 255, 204), new Color(102, 255, 178)},
+
+             // Pastel colors theme
+             {new Color(255, 204, 255), new Color(255, 204, 204), new Color(255, 255, 204),
+                     new Color(204, 255, 204), new Color(204, 255, 255), new Color(204, 204, 255)},
+
+             // Rainbow theme
+             {Color.RED, Color.ORANGE, Color.YELLOW, Color.GREEN, Color.BLUE, Color.MAGENTA}
+     };
+     private int currentThemeIndex = 3;
     public static void main(String[] args) {
         new TowersOfHanoi().setVisible(true);
     }
@@ -37,21 +52,22 @@ import java.util.TimerTask;
         pegs[2] = new Peg(600, 100, 20, 250);
 
         // Initialize and add disks to the first peg
-        for (int i = 5; i >= 0; i--) {
-            Color color = new Color((int)(Math.random() * 0x1000000));
-            pegs[0].addDisk(new Disk(i + 1, color, 0, 0, 60 + i * 10, 20));
-        }
+        //for (int i = 5; i >= 0; i--) {
+            //Color color = new Color((int) (Math.random() * 0x1000000));
+            //pegs[0].addDisk(new Disk(i + 1, color, 0, 0, 60 + i * 10, 20));
+        //}
+        this.initializeDisks(colorThemes[currentThemeIndex]);
 
-        movesLabel = new JLabel(LanguageManager.getMessage("game.moves") + moves);
-        movesLabel.setBounds(50, 50, 100, 20);
-        add(movesLabel);
+        this.movesLabel = new JLabel(LanguageManager.getMessage("game.moves") + moves);
+        this.movesLabel.setBounds(50, 50, 100, 20);
+        this.add(movesLabel);
 
-        timerLabel = new JLabel(LanguageManager.getMessage("game.time") + " 0s");
-        timerLabel.setBounds(650, 50, 100, 20);
-        add(timerLabel);
+        this.timerLabel = new JLabel(LanguageManager.getMessage("game.time") + " 0s");
+        this.timerLabel.setBounds(650, 50, 100, 20);
+        this.add(timerLabel);
 
-        startTime = System.currentTimeMillis();
-        startTimer();
+        this.startTime = System.currentTimeMillis();
+        this.startTimer();
         //repaint();
 
         JButton languageButton = new JButton("Language");
@@ -60,9 +76,22 @@ import java.util.TimerTask;
         buttonPanel.add(languageButton, BorderLayout.SOUTH);
         add(buttonPanel, BorderLayout.SOUTH);
 
-
+        JPanel themePanel = new JPanel();
+        String[] themeNames = {"Warm Colors", "Cool Colors", "Pastel Colors", "Rainbow"};
+        for (String themeName : themeNames) {
+            JButton button = new JButton(themeName);
+            button.addActionListener(e -> changeColorTheme(themeName));
+            themePanel.add(button);
+        }
+        this.add(themePanel, BorderLayout.SOUTH);
     }
-    private void startTimer() {
+
+    private void initializeDisks(Color[] colors) {
+        for (int i = 5; i >= 0; i--) {
+            this.pegs[0].addDisk(new Disk(i + 1, colors[i], 0, 0, 60 + i * 10, 20));
+        }
+    }
+   /* private void startTimer() {
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -72,7 +101,18 @@ import java.util.TimerTask;
                 repaint();
             }
         }, 0, 1000);
-    }
+    }*/
+   private void startTimer() {
+       timer = new Timer();
+       timer.scheduleAtFixedRate(new TimerTask() {
+           public void run() {
+               long elapsedTime = (System.currentTimeMillis() - startTime) / 1000;
+               timerLabel.setText("Time: " + elapsedTime + "s");
+               repaint();
+           }
+       }, 0L, 1000L);
+   }
+
     @Override
     public void paint(Graphics g) {
         super.paint(g);
@@ -82,8 +122,40 @@ import java.util.TimerTask;
             peg.draw(g);
         }
     }
+     private void changeColorTheme(String themeName) {
+         switch (themeName) {
+             case "Warm Colors":
+                 currentThemeIndex = 0;
+                 break;
+             case "Cool Colors":
+                 currentThemeIndex = 1;
+                 break;
+             case "Pastel Colors":
+                 currentThemeIndex = 2;
+                 break;
+             case "Rainbow":
+                 currentThemeIndex = 3;
+                 break;
+             default:
+                 // Default to rainbow theme if unknown theme name is provided
+                 currentThemeIndex = 3;
+                 break;
+         }
 
-    @Override
+         // Update colors of all disks based on the new theme
+         Color[] newColors = colorThemes[currentThemeIndex];
+         for (Peg peg : pegs) {
+             for (int i = 0; i < peg.getDisks().size(); i++) {
+                 Disk disk = peg.getDisks().get(i);
+                 if (i < newColors.length) {
+                     disk.setColor(newColors[i]);
+                 }
+             }
+         }
+
+         repaint();
+     }
+     @Override
     public void mouseClicked(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();

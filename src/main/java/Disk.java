@@ -35,4 +35,7 @@ public class Disk {
     public Rectangle getBounds() {
         return bounds;
     }
+    public void setColor(Color color) {
+        this.color = color;
+    }
 }

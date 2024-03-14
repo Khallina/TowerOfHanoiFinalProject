@@ -34,6 +34,10 @@ public class Peg {
     public int getDiskCount() {
         return disks.size();
     }
+    public Stack<Disk> getDisks() {
+        return disks;
+    }
+
 
     public boolean isEmpty() {
         return disks.isEmpty();
