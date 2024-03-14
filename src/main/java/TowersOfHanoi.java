@@ -14,6 +14,8 @@ import java.util.TimerTask;
 
      private SoundPlayer goodSound = new SuccessClick();
     private SoundPlayer badSound = new FailClick();
+    private FailureTracker failureTracker;
+    private FailureChart failureChart;
 
      private final Color[][] colorThemes = {
              // Warm colors theme
@@ -42,7 +44,7 @@ import java.util.TimerTask;
     private void initializeGame() {
 
         LanguageManager.initialize();
-        setSize(800, 600);
+        setSize(800, 700);
         setTitle(LanguageManager.getMessage("game.title"));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addMouseListener(this);
@@ -84,6 +86,14 @@ import java.util.TimerTask;
             themePanel.add(button);
         }
         this.add(themePanel, BorderLayout.SOUTH);
+
+        failureTracker = new FailureTracker(0);
+
+        // Initialize FailureChart
+        failureChart = new FailureChart(10, 100);
+        add(failureChart, BorderLayout.CENTER); // Add FailureChart to the center of the JFrame
+        setLayout(new GridLayout(0, 1)); // 1 rows, 1 column
+        add(failureChart); // Add FailureChart below the game
     }
 
     private void initializeDisks(Color[] colors) {
@@ -180,10 +190,13 @@ import java.util.TimerTask;
                                             (System.currentTimeMillis() - startTime) / 1000 + " seconds with " + moves + " moves.");
                         }
                          goodSound.play();
+                        failureChart.updateChart(failureTracker.getFails()); // Update FailureChart
                         return;
                     }
                 }
                  badSound.play();
+                failureTracker.addFail();
+                failureChart.updateChart(failureTracker.getFails()); // Update FailureChart
                 return;
             }
         }
