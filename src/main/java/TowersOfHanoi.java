@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -16,6 +18,8 @@ import java.util.TimerTask;
     private SoundPlayer badSound = new FailClick();
     private FailureTracker failureTracker;
     private FailureChart failureChart;
+    private LanguageMenu languageMenu;
+    private LanguageManager languageManager;
 
      private final Color[][] colorThemes = {
              // Warm colors theme
@@ -43,9 +47,11 @@ import java.util.TimerTask;
 
     private void initializeGame() {
 
-        LanguageManager.initialize();
+        Locale currentLocale = Locale.getDefault(); // init language manager
+        this.languageManager = new LanguageManager(currentLocale, ResourceBundle.getBundle("messages", currentLocale));
+
         setSize(800, 700);
-        setTitle(LanguageManager.getMessage("game.title"));
+        setTitle(languageManager.getMessage("game.title"));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addMouseListener(this);
 
@@ -60,11 +66,11 @@ import java.util.TimerTask;
         //}
         this.initializeDisks(colorThemes[currentThemeIndex]);
 
-        this.movesLabel = new JLabel(LanguageManager.getMessage("game.moves") + moves);
+        this.movesLabel = new JLabel(languageManager.getMessage("game.moves") + moves);
         this.movesLabel.setBounds(50, 50, 100, 20);
         this.add(movesLabel);
 
-        this.timerLabel = new JLabel(LanguageManager.getMessage("game.time") + " 0s");
+        this.timerLabel = new JLabel(languageManager.getMessage("game.time") + " 0s");
         this.timerLabel.setBounds(650, 50, 100, 20);
         this.add(timerLabel);
 
@@ -94,6 +100,9 @@ import java.util.TimerTask;
         add(failureChart, BorderLayout.CENTER); // Add FailureChart to the center of the JFrame
         setLayout(new GridLayout(0, 1)); // 1 rows, 1 column
         add(failureChart); // Add FailureChart below the game
+        failureChart.updateChart(failureTracker.getFails());
+
+        languageMenu = new LanguageMenu(this, languageManager); // init language menu
     }
 
     private void initializeDisks(Color[] colors) {
@@ -117,7 +126,7 @@ import java.util.TimerTask;
        timer.scheduleAtFixedRate(new TimerTask() {
            public void run() {
                long elapsedTime = (System.currentTimeMillis() - startTime) / 1000;
-               timerLabel.setText("Time: " + elapsedTime + "s");
+               timerLabel.setText(languageManager.getMessage("game.time") + elapsedTime + "s");
                repaint();
            }
        }, 0L, 1000L);
@@ -181,12 +190,12 @@ import java.util.TimerTask;
                         peg.removeTopDisk();
                         nextPeg.addDisk(topDisk);
                         moves++;
-                        movesLabel.setText(LanguageManager.getMessage("game.moves") + moves);
+                        movesLabel.setText(languageManager.getMessage("game.moves") + moves);
                         repaint();
                         if (nextPegIndex == 2 && nextPeg.getDiskCount() == 6) {
                             timer.cancel();
                             JOptionPane.showMessageDialog(null,
-                                    LanguageManager.getMessage("game.congratulations") + " " +
+                                    languageManager.getMessage("game.congratulations") + " " +
                                             (System.currentTimeMillis() - startTime) / 1000 + " seconds with " + moves + " moves.");
                         }
                          goodSound.play();
@@ -216,7 +225,6 @@ import java.util.TimerTask;
     public void mouseExited(MouseEvent e) {}
 
      private void openLanguageMenu() {
-         LanguageMenu languageMenu = new LanguageMenu(this);
          languageMenu.addWindowListener(new WindowAdapter() {
              @Override
              public void windowClosed(WindowEvent e) {
@@ -230,7 +238,7 @@ import java.util.TimerTask;
      }
 
      public void updateLanguage() {
-         setTitle(LanguageManager.getMessage("game.title"));
-         movesLabel.setText(LanguageManager.getMessage("game.moves") + moves);
+         setTitle(languageManager.getMessage("game.title"));
+         movesLabel.setText(languageManager.getMessage("game.moves") + moves);
      }
 }

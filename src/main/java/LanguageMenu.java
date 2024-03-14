@@ -3,11 +3,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class LanguageMenu extends JDialog {
     private JComboBox<String> languageComboBox;
 
-    public LanguageMenu(JFrame parent) {
+    public LanguageMenu(JFrame parent, LanguageManager language) {
         super(parent, "Language Menu", true); // Set the title and make it modal
         setSize(300, 300);
         setPreferredSize(new Dimension(300, 300));
@@ -27,29 +28,29 @@ public class LanguageMenu extends JDialog {
         applyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                applyLanguage();
+                applyLanguage(language);
             }
         });
         add(applyButton);
     }
 
-    private void applyLanguage() {
+    private void applyLanguage(LanguageManager language) {
         int selectedLanguageIndex = languageComboBox.getSelectedIndex();
         switch (selectedLanguageIndex) {
             case 0: // English
-                LanguageManager.setLocale(Locale.ENGLISH);
+                language.setLocale(Locale.ENGLISH);
                 break;
             case 1: // Japanese
-                LanguageManager.setLocale(Locale.JAPANESE);
+                language.setLocale(Locale.JAPANESE);
                 break;
             case 2: // Spanish
-                LanguageManager.setLocale(new Locale("es", "ES"));
+                language.setLocale(new Locale("es", "ES"));
                 break;
             case 3: // French
-                LanguageManager.setLocale(Locale.FRENCH);
+                language.setLocale(Locale.FRENCH);
                 break;
             case 4: // Korean
-                LanguageManager.setLocale(Locale.KOREAN);
+                language.setLocale(Locale.KOREAN);
                 break;
             default:
                 break;
@@ -67,7 +68,10 @@ public class LanguageMenu extends JDialog {
                 frame.setLocationRelativeTo(null);
                 frame.setVisible(true);
 
-                new LanguageMenu(frame).setVisible(true);
+                Locale currentLocale = Locale.getDefault();
+                LanguageManager languageManager = new LanguageManager(currentLocale, ResourceBundle.getBundle("messages", currentLocale));
+
+                new LanguageMenu(frame, languageManager ).setVisible(true);
             }
         });
     }
