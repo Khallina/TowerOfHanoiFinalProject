@@ -20,7 +20,8 @@ import java.util.TimerTask;
     private FailureChart failureChart;
     private LanguageMenu languageMenu;
     private LanguageManager languageManager;
-
+    private final Object lock = new Object();
+    //private Instructions instructions;
      private final Color[][] colorThemes = {
              // Warm colors theme
              {new Color(255, 102, 102), new Color(255, 153, 153), new Color(255, 204, 153),
@@ -39,6 +40,11 @@ import java.util.TimerTask;
      };
      private int currentThemeIndex = 3;
     public static void main(String[] args) {
+        Instructions instructions;
+        instructions = new Instructions();
+        instructions.open();
+
+        //TowersOfHanoi towersOfHanoi = new TowersOfHanoi();
         new TowersOfHanoi().setVisible(true);
     }
     public TowersOfHanoi() {
