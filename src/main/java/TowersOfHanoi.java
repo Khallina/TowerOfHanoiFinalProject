@@ -21,6 +21,8 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
     private LanguageManager languageManager;
     //private Instructions instructions;
     private ProgressTracker progressTracker;
+    private boolean textShown = false;
+
     private final Color[][] colorThemes = {
             // Warm colors theme
             {new Color(255, 102, 102), new Color(255, 153, 153), new Color(255, 204, 153),
@@ -146,6 +148,12 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
                 long elapsedTime = (System.currentTimeMillis() - startTime) / 1000;
                 timerLabel.setText(languageManager.getMessage("game.time") + elapsedTime + "s");
                 repaint();
+                // Check if 10 seconds have passed
+                if (elapsedTime >= 10 && !textShown) {
+                    //timer.cancel(); // Stop the timer
+                    openHelperTool(); // Open the HelperTool window
+                    textShown = true;
+                }
             }
         }, 0L, 1000L);
     }
@@ -263,6 +271,11 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
 
     @Override
     public void mouseExited(MouseEvent e) {}
+
+    private void openHelperTool() {
+        HelperTool helpertool = new HelperTool();
+        helpertool.open();
+    }
 
     private void openLanguageMenu() {
         languageMenu.addWindowListener(new WindowAdapter() {
