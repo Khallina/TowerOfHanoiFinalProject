@@ -103,7 +103,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         failureTracker = new FailureTracker(0);
 
         // Initialize FailureChart
-        failureChart = new FailureChart(10, 100);
+        failureChart = new FailureChart(10, 100, languageManager);
         add(failureChart, BorderLayout.CENTER); // Add FailureChart to the center of the JFrame
         setLayout(new GridLayout(0, 1)); // 1 rows, 1 column
         add(failureChart); // Add FailureChart below the game
@@ -229,9 +229,11 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
                                         timer.cancel();
                                         progressTracker.addProgress(index, moves, (System.currentTimeMillis() - startTime) / 1000, failureTracker.getFails());
                                         JOptionPane.showMessageDialog(null,
-                                                languageManager.getMessage("game.congratulations") + " " +
-                                                        (System.currentTimeMillis() - startTime) / 1000 + " seconds with " + moves + " moves.");
-                                    }
+                                    languageManager.getMessage("game.congratulations") + "\n" + 
+                                    languageManager.getMessage("game.fails") + failureTracker.getFails() + "\n" +
+                                    languageManager.getMessage("game.time") + (System.currentTimeMillis() - startTime) / 1000 + "\n" + 
+                                    languageManager.getMessage("game.moves")+ moves);
+                        }
                                     goodSound.play();
                                     //failureChart.updateChart(failureTracker.getFails()); // Update FailureChart
                                     return;
@@ -278,5 +280,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
     public void updateLanguage() {
         setTitle(languageManager.getMessage("game.title"));
         movesLabel.setText(languageManager.getMessage("game.moves") + moves);
+        this.failureChart.updateLanguage(failureTracker.getFails());
+
     }
 }

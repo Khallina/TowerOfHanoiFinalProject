@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class FailureChart extends JPanel {
     private int[] failureCounts;
@@ -9,14 +11,16 @@ public class FailureChart extends JPanel {
     private final Color borderColor = Color.BLACK; // Black color for bar borders
     private JLabel titleLabel;
     private JTextField failCountField;
+    private LanguageManager languageManager;
 
-    public FailureChart(int maxWidth, int maxHeight) {
+    public FailureChart(int maxWidth, int maxHeight, LanguageManager languageManager) {
+        this.languageManager = languageManager;
         this.maxWidth = maxWidth;
         this.maxHeight = maxHeight;
         this.failureCounts = new int[maxWidth];
 
         // Initialize title label
-        titleLabel = new JLabel("Failure Chart");
+        titleLabel = new JLabel(languageManager.getMessage("game.failchart"));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
@@ -40,10 +44,23 @@ public class FailureChart extends JPanel {
         failureCounts[maxWidth - 1] = newFailureCount;
 
         // Update fail count field
-        failCountField.setText("Fails: " + newFailureCount);
+        failCountField.setText(languageManager.getMessage("game.fails") + newFailureCount);
 
         repaint();
     }
+
+    public void updateLanguage(int newFailureCount) {
+        // Replace the oldest failure count with the new value
+        failureCounts[0] = newFailureCount;
+        
+        // Update fail count field
+
+        failCountField.setText(languageManager.getMessage("game.fails") + newFailureCount);
+        titleLabel.setText(languageManager.getMessage("game.failchart") + ": " + newFailureCount);
+    
+        repaint();
+    }
+    
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -75,8 +92,10 @@ public class FailureChart extends JPanel {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Failure Chart");
-            FailureChart failureChart = new FailureChart(20, 10); // Adjust the parameters as needed
+            Locale currentLocale = Locale.getDefault();// init language manager
+            LanguageManager languageManager = new LanguageManager(currentLocale, ResourceBundle.getBundle("messages", currentLocale));
+            JFrame frame = new JFrame("Failure Test");
+            FailureChart failureChart = new FailureChart(20, 10,languageManager); // Adjust the parameters as needed
             frame.add(failureChart);
             frame.setSize(400, 250); // Increased height to accommodate the new components
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
