@@ -13,33 +13,15 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
     private JLabel movesLabel;
     private JLabel timerLabel;
     private Timer timer;
+    private ColorThemeManager colorThemeManager;
     private SoundPlayer goodSound = new SuccessClick();
     private SoundPlayer badSound = new FailClick();
     private FailureTracker failureTracker;
     private FailureChart failureChart;
     private LanguageMenu languageMenu;
     private LanguageManager languageManager;
-    //private Instructions instructions;
     private ProgressTracker progressTracker;
     private boolean textShown = false;
-
-    private final Color[][] colorThemes = {
-            // Warm colors theme
-            {new Color(255, 102, 102), new Color(255, 153, 153), new Color(255, 204, 153),
-                    new Color(255, 255, 153), new Color(255, 204, 153), new Color(255, 153, 153)},
-
-            // Cool colors theme
-            {new Color(102, 178, 255), new Color(153, 204, 255), new Color(153, 255, 255),
-                    new Color(204, 255, 255), new Color(153, 255, 204), new Color(102, 255, 178)},
-
-            // Pastel colors theme
-            {new Color(255, 204, 255), new Color(255, 204, 204), new Color(255, 255, 204),
-                    new Color(204, 255, 204), new Color(204, 255, 255), new Color(204, 204, 255)},
-
-            // Rainbow theme
-            {Color.RED, Color.ORANGE, Color.YELLOW, Color.GREEN, Color.BLUE, Color.MAGENTA}
-    };
-    private int currentThemeIndex = 3;
 
     public static void main(String[] args) {
         Instructions instructions;
@@ -54,7 +36,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
     }
 
     private void initializeGame() {
-        Locale currentLocale = Locale.getDefault();// init language manager
+        Locale currentLocale = Locale.getDefault();
         this.languageManager = new LanguageManager(currentLocale, ResourceBundle.getBundle("messages", currentLocale));
 
         setSize(800, 800);
@@ -66,13 +48,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         pegs[1] = new Peg(350, 100, 20, 250);
         pegs[2] = new Peg(600, 100, 20, 250);
 
-        // Initialize and add disks to the first peg
-        //for (int i = 5; i >= 0; i--) {
-        //Color color = new Color((int) (Math.random() * 0x1000000));
-        //pegs[0].addDisk(new Disk(i + 1, color, 0, 0, 60 + i * 10, 20));
-        //}
-
-        this.initializeDisks(colorThemes[currentThemeIndex]);
+        this.initializeDisks();
 
         this.movesLabel = new JLabel(languageManager.getMessage("game.moves") + moves);
         this.movesLabel.setBounds(50, 50, 100, 20);
@@ -84,8 +60,6 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
 
         this.startTime = System.currentTimeMillis();
         this.startTimer();
-        //repaint();
-
 
         JButton languageButton = new JButton("Language");
         languageButton.addActionListener(e -> openLanguageMenu());
@@ -103,44 +77,28 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         this.add(themePanel, BorderLayout.NORTH);
 
         failureTracker = new FailureTracker(0);
-
-        // Initialize FailureChart
         failureChart = new FailureChart(10, 100, languageManager);
-        add(failureChart, BorderLayout.CENTER); // Add FailureChart to the center of the JFrame
-        setLayout(new GridLayout(0, 1)); // 1 rows, 1 column
-        add(failureChart); // Add FailureChart below the game
-        failureChart.updateChart(failureTracker.getFails());
+        add(failureChart, BorderLayout.CENTER);
+        setLayout(new GridLayout(0, 1));
+        add(failureChart);
 
         languageMenu = new LanguageMenu(this, languageManager);
 
         progressTracker = new ProgressTracker();
-        // Adding progress tracker button
         JButton progressTrackerButton = new JButton("Progress Tracker");
         progressTrackerButton.addActionListener(e -> progressTracker.displayProgressTracker());
         JPanel progressPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         progressPanel.add(progressTrackerButton);
         add(progressPanel, BorderLayout.NORTH);
-
-
     }
 
-    private void initializeDisks(Color[] colors) {
+    private void initializeDisks() {
+        colorThemeManager = new ColorThemeManager();
+        Color[] colors = colorThemeManager.getCurrentColorTheme();
         for (int i = 5; i >= 0; i--) {
             this.pegs[0].addDisk(new Disk(i + 1, colors[i], 0, 0, 60 + i * 10, 20));
         }
     }
-    /* private void startTimer() {
-         timer = new Timer();
-         timer.scheduleAtFixedRate(new TimerTask() {
-             @Override
-             public void run() {
-                 long elapsedTime = System.currentTimeMillis() - startTime;
-                 timerLabel.setText(LanguageManager.getMessage("game.time") + (elapsedTime / 1000) + "s");
-                 repaint();
-             }
-         }, 0, 1000);
-     }*/
-
     private void startTimer() {
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -157,6 +115,34 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
             }
         }, 0L, 1000L);
     }
+    private void changeColorTheme(String themeName) {
+        colorThemeManager.setCurrentThemeIndex(getThemeIndex(themeName));
+        Color[] newColors = colorThemeManager.getCurrentColorTheme();
+        for (Peg peg : pegs) {
+            for (int i = 0; i < peg.getDisks().size(); i++) {
+                Disk disk = peg.getDisks().get(i);
+                if (i < newColors.length) {
+                    disk.setColor(newColors[i]);
+                }
+            }
+        }
+        repaint();
+    }
+
+    private int getThemeIndex(String themeName) {
+        switch (themeName) {
+            case "Warm Colors":
+                return 0;
+            case "Cool Colors":
+                return 1;
+            case "Pastel Colors":
+                return 2;
+            case "Rainbow":
+                return 3;
+            default:
+                return 3; // Default to rainbow theme
+        }
+    }
 
     @Override
     public void paint(Graphics g) {
@@ -166,40 +152,6 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         for (Peg peg : pegs) {
             peg.draw(g);
         }
-    }
-
-    private void changeColorTheme(String themeName) {
-        switch (themeName) {
-            case "Warm Colors":
-                currentThemeIndex = 0;
-                break;
-            case "Cool Colors":
-                currentThemeIndex = 1;
-                break;
-            case "Pastel Colors":
-                currentThemeIndex = 2;
-                break;
-            case "Rainbow":
-                currentThemeIndex = 3;
-                break;
-            default:
-                // Default to rainbow theme if unknown theme name is provided
-                currentThemeIndex = 3;
-                break;
-        }
-
-        // Update colors of all disks based on the new theme
-        Color[] newColors = colorThemes[currentThemeIndex];
-        for (Peg peg : pegs) {
-            for (int i = 0; i < peg.getDisks().size(); i++) {
-                Disk disk = peg.getDisks().get(i);
-                if (i < newColors.length) {
-                    disk.setColor(newColors[i]);
-                }
-            }
-        }
-
-        repaint();
     }
 
     @Override
@@ -237,11 +189,11 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
                                         timer.cancel();
                                         progressTracker.addProgress(index, moves, (System.currentTimeMillis() - startTime) / 1000, failureTracker.getFails());
                                         JOptionPane.showMessageDialog(null,
-                                    languageManager.getMessage("game.congratulations") + "\n" + 
-                                    languageManager.getMessage("game.fails") + failureTracker.getFails() + "\n" +
-                                    languageManager.getMessage("game.time") + (System.currentTimeMillis() - startTime) / 1000 + "\n" + 
-                                    languageManager.getMessage("game.moves")+ moves);
-                        }
+                                                languageManager.getMessage("game.congratulations") + "\n" +
+                                                        languageManager.getMessage("game.fails") + failureTracker.getFails() + "\n" +
+                                                        languageManager.getMessage("game.time") + (System.currentTimeMillis() - startTime) / 1000 + "\n" +
+                                                        languageManager.getMessage("game.moves")+ moves);
+                                    }
                                     goodSound.play();
                                     //failureChart.updateChart(failureTracker.getFails()); // Update FailureChart
                                     return;
@@ -271,12 +223,10 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
 
     @Override
     public void mouseExited(MouseEvent e) {}
-
     private void openHelperTool() {
         HelperTool helpertool = new HelperTool();
         helpertool.open();
     }
-
     private void openLanguageMenu() {
         languageMenu.addWindowListener(new WindowAdapter() {
             @Override
@@ -294,6 +244,5 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         setTitle(languageManager.getMessage("game.title"));
         movesLabel.setText(languageManager.getMessage("game.moves") + moves);
         this.failureChart.updateLanguage(failureTracker.getFails());
-
     }
 }
