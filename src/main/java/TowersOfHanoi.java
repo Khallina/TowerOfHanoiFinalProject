@@ -6,57 +6,40 @@ import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 
- public class TowersOfHanoi extends JFrame implements MouseListener {
+public class TowersOfHanoi extends JFrame implements MouseListener {
     private Peg[] pegs = new Peg[3];
     private int moves = 0;
     private long startTime;
     private JLabel movesLabel;
     private JLabel timerLabel;
     private Timer timer;
-
-     private SoundPlayer goodSound = new SuccessClick();
+    private ColorThemeManager colorThemeManager;
+    private SoundPlayer goodSound = new SuccessClick();
     private SoundPlayer badSound = new FailClick();
     private FailureTracker failureTracker;
     private FailureChart failureChart;
     private LanguageMenu languageMenu;
     private LanguageManager languageManager;
-    private final Object lock = new Object();
-    //private Instructions instructions;
-     private final Color[][] colorThemes = {
-             // Warm colors theme
-             {new Color(255, 102, 102), new Color(255, 153, 153), new Color(255, 204, 153),
-                     new Color(255, 255, 153), new Color(255, 204, 153), new Color(255, 153, 153)},
+    private ProgressTracker progressTracker;
+    private boolean textShown = false;
 
-             // Cool colors theme
-             {new Color(102, 178, 255), new Color(153, 204, 255), new Color(153, 255, 255),
-                     new Color(204, 255, 255), new Color(153, 255, 204), new Color(102, 255, 178)},
-
-             // Pastel colors theme
-             {new Color(255, 204, 255), new Color(255, 204, 204), new Color(255, 255, 204),
-                     new Color(204, 255, 204), new Color(204, 255, 255), new Color(204, 204, 255)},
-
-             // Rainbow theme
-             {Color.RED, Color.ORANGE, Color.YELLOW, Color.GREEN, Color.BLUE, Color.MAGENTA}
-     };
-     private int currentThemeIndex = 3;
     public static void main(String[] args) {
         Instructions instructions;
         instructions = new Instructions();
         instructions.open();
 
-        //TowersOfHanoi towersOfHanoi = new TowersOfHanoi();
         new TowersOfHanoi().setVisible(true);
     }
+
     public TowersOfHanoi() {
         initializeGame();
     }
 
     private void initializeGame() {
-
-        Locale currentLocale = Locale.getDefault(); // init language manager
+        Locale currentLocale = Locale.getDefault();
         this.languageManager = new LanguageManager(currentLocale, ResourceBundle.getBundle("messages", currentLocale));
 
-        setSize(800, 700);
+        setSize(800, 800);
         setTitle(languageManager.getMessage("game.title"));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addMouseListener(this);
@@ -65,12 +48,7 @@ import java.util.TimerTask;
         pegs[1] = new Peg(350, 100, 20, 250);
         pegs[2] = new Peg(600, 100, 20, 250);
 
-        // Initialize and add disks to the first peg
-        //for (int i = 5; i >= 0; i--) {
-            //Color color = new Color((int) (Math.random() * 0x1000000));
-            //pegs[0].addDisk(new Disk(i + 1, color, 0, 0, 60 + i * 10, 20));
-        //}
-        this.initializeDisks(colorThemes[currentThemeIndex]);
+        this.initializeDisks();
 
         this.movesLabel = new JLabel(languageManager.getMessage("game.moves") + moves);
         this.movesLabel.setBounds(50, 50, 100, 20);
@@ -82,7 +60,6 @@ import java.util.TimerTask;
 
         this.startTime = System.currentTimeMillis();
         this.startTimer();
-        //repaint();
 
         JButton languageButton = new JButton("Language");
         languageButton.addActionListener(e -> openLanguageMenu());
@@ -97,46 +74,75 @@ import java.util.TimerTask;
             button.addActionListener(e -> changeColorTheme(themeName));
             themePanel.add(button);
         }
-        this.add(themePanel, BorderLayout.SOUTH);
+        this.add(themePanel, BorderLayout.NORTH);
 
         failureTracker = new FailureTracker(0);
+        failureChart = new FailureChart(10, 100, languageManager);
+        add(failureChart, BorderLayout.CENTER);
+        setLayout(new GridLayout(0, 1));
+        add(failureChart);
 
-        // Initialize FailureChart
-        failureChart = new FailureChart(10, 100);
-        add(failureChart, BorderLayout.CENTER); // Add FailureChart to the center of the JFrame
-        setLayout(new GridLayout(0, 1)); // 1 rows, 1 column
-        add(failureChart); // Add FailureChart below the game
-        failureChart.updateChart(failureTracker.getFails());
+        languageMenu = new LanguageMenu(this, languageManager);
 
-        languageMenu = new LanguageMenu(this, languageManager); // init language menu
+        progressTracker = new ProgressTracker();
+        JButton progressTrackerButton = new JButton("Progress Tracker");
+        progressTrackerButton.addActionListener(e -> progressTracker.displayProgressTracker());
+        JPanel progressPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        progressPanel.add(progressTrackerButton);
+        add(progressPanel, BorderLayout.NORTH);
     }
 
-    private void initializeDisks(Color[] colors) {
+    private void initializeDisks() {
+        colorThemeManager = new ColorThemeManager();
+        Color[] colors = colorThemeManager.getCurrentColorTheme();
         for (int i = 5; i >= 0; i--) {
             this.pegs[0].addDisk(new Disk(i + 1, colors[i], 0, 0, 60 + i * 10, 20));
         }
     }
-   /* private void startTimer() {
+    private void startTimer() {
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
             public void run() {
-                long elapsedTime = System.currentTimeMillis() - startTime;
-                timerLabel.setText(LanguageManager.getMessage("game.time") + (elapsedTime / 1000) + "s");
+                long elapsedTime = (System.currentTimeMillis() - startTime) / 1000;
+                timerLabel.setText(languageManager.getMessage("game.time") + elapsedTime + "s");
                 repaint();
+                // Check if 10 seconds have passed
+                if (elapsedTime >= 10 && !textShown) {
+                    //timer.cancel(); // Stop the timer
+                    openHelperTool(); // Open the HelperTool window
+                    textShown = true;
+                }
             }
-        }, 0, 1000);
-    }*/
-   private void startTimer() {
-       timer = new Timer();
-       timer.scheduleAtFixedRate(new TimerTask() {
-           public void run() {
-               long elapsedTime = (System.currentTimeMillis() - startTime) / 1000;
-               timerLabel.setText(languageManager.getMessage("game.time") + elapsedTime + "s");
-               repaint();
-           }
-       }, 0L, 1000L);
-   }
+        }, 0L, 1000L);
+    }
+    private void changeColorTheme(String themeName) {
+        colorThemeManager.setCurrentThemeIndex(getThemeIndex(themeName));
+        Color[] newColors = colorThemeManager.getCurrentColorTheme();
+        for (Peg peg : pegs) {
+            for (int i = 0; i < peg.getDisks().size(); i++) {
+                Disk disk = peg.getDisks().get(i);
+                if (i < newColors.length) {
+                    disk.setColor(newColors[i]);
+                }
+            }
+        }
+        repaint();
+    }
+
+    private int getThemeIndex(String themeName) {
+        switch (themeName) {
+            case "Warm Colors":
+                return 0;
+            case "Cool Colors":
+                return 1;
+            case "Pastel Colors":
+                return 2;
+            case "Rainbow":
+                return 3;
+            default:
+                return 3; // Default to rainbow theme
+        }
+    }
 
     @Override
     public void paint(Graphics g) {
@@ -147,40 +153,8 @@ import java.util.TimerTask;
             peg.draw(g);
         }
     }
-     private void changeColorTheme(String themeName) {
-         switch (themeName) {
-             case "Warm Colors":
-                 currentThemeIndex = 0;
-                 break;
-             case "Cool Colors":
-                 currentThemeIndex = 1;
-                 break;
-             case "Pastel Colors":
-                 currentThemeIndex = 2;
-                 break;
-             case "Rainbow":
-                 currentThemeIndex = 3;
-                 break;
-             default:
-                 // Default to rainbow theme if unknown theme name is provided
-                 currentThemeIndex = 3;
-                 break;
-         }
 
-         // Update colors of all disks based on the new theme
-         Color[] newColors = colorThemes[currentThemeIndex];
-         for (Peg peg : pegs) {
-             for (int i = 0; i < peg.getDisks().size(); i++) {
-                 Disk disk = peg.getDisks().get(i);
-                 if (i < newColors.length) {
-                     disk.setColor(newColors[i]);
-                 }
-             }
-         }
-
-         repaint();
-     }
-     @Override
+    @Override
     public void mouseClicked(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
@@ -188,35 +162,55 @@ import java.util.TimerTask;
         for (int i = 0; i < pegs.length; i++) {
             Peg peg = pegs[i];
             Disk topDisk = peg.peekTopDisk();
+
+            final int index = i;
+
             if (topDisk != null && topDisk.contains(x, y)) {
                 for (int j = 1; j < pegs.length; j++) {
                     int nextPegIndex = (i + j) % pegs.length;
                     Peg nextPeg = pegs[nextPegIndex];
                     if (nextPeg.isEmpty() || topDisk.getSize() < nextPeg.peekTopDisk().getSize()) {
-                        peg.removeTopDisk();
-                        nextPeg.addDisk(topDisk);
-                        moves++;
-                        movesLabel.setText(languageManager.getMessage("game.moves") + moves);
-                        repaint();
-                        if (nextPegIndex == 2 && nextPeg.getDiskCount() == 6) {
-                            timer.cancel();
-                            JOptionPane.showMessageDialog(null,
-                                    languageManager.getMessage("game.congratulations") + " " +
-                                            (System.currentTimeMillis() - startTime) / 1000 + " seconds with " + moves + " moves.");
-                        }
-                         goodSound.play();
-                        failureChart.updateChart(failureTracker.getFails()); // Update FailureChart
+                        Animation animation = new Animation(topDisk, peg, nextPeg, 5);
+                        Timer animationTimer = new Timer();
+                        animationTimer.scheduleAtFixedRate(new TimerTask() {
+                            @Override
+                            public void run() {
+                                if (!animation.isFinished()) {
+                                    animation.update();
+                                    repaint();
+                                } else {
+                                    peg.removeTopDisk();
+                                    nextPeg.addDisk(topDisk);
+                                    moves++;
+                                    movesLabel.setText(languageManager.getMessage("game.moves") + moves);
+                                    animationTimer.cancel();
+                                    repaint();
+                                    if (nextPegIndex == 2 && nextPeg.getDiskCount() == 6) {
+                                        timer.cancel();
+                                        progressTracker.addProgress(index, moves, (System.currentTimeMillis() - startTime) / 1000, failureTracker.getFails());
+                                        JOptionPane.showMessageDialog(null,
+                                                languageManager.getMessage("game.congratulations") + "\n" +
+                                                        languageManager.getMessage("game.fails") + failureTracker.getFails() + "\n" +
+                                                        languageManager.getMessage("game.time") + (System.currentTimeMillis() - startTime) / 1000 + "\n" +
+                                                        languageManager.getMessage("game.moves")+ moves);
+                                    }
+                                    goodSound.play();
+                                    //failureChart.updateChart(failureTracker.getFails()); // Update FailureChart
+                                    return;
+
+                                }
+                            }
+                        }, 0, 1000 / 100);
                         return;
                     }
                 }
-                 badSound.play();
+                badSound.play();
                 failureTracker.addFail();
-                failureChart.updateChart(failureTracker.getFails()); // Update FailureChart
+                failureChart.updateChart(failureTracker.getFails());
                 return;
             }
         }
     }
-
 
     @Override
     public void mousePressed(MouseEvent e) {}
@@ -229,22 +223,26 @@ import java.util.TimerTask;
 
     @Override
     public void mouseExited(MouseEvent e) {}
+    private void openHelperTool() {
+        HelperTool helpertool = new HelperTool();
+        helpertool.open();
+    }
+    private void openLanguageMenu() {
+        languageMenu.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                updateLanguage();
+            }
+        });
+        languageMenu.pack();
+        languageMenu.setLocationRelativeTo(null);
+        languageMenu.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        languageMenu.setVisible(true);
+    }
 
-     private void openLanguageMenu() {
-         languageMenu.addWindowListener(new WindowAdapter() {
-             @Override
-             public void windowClosed(WindowEvent e) {
-                 updateLanguage();
-             }
-         });
-         languageMenu.pack();
-         languageMenu.setLocationRelativeTo(null); // Center the dialog
-         languageMenu.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-         languageMenu.setVisible(true);
-     }
-
-     public void updateLanguage() {
-         setTitle(languageManager.getMessage("game.title"));
-         movesLabel.setText(languageManager.getMessage("game.moves") + moves);
-     }
+    public void updateLanguage() {
+        setTitle(languageManager.getMessage("game.title"));
+        movesLabel.setText(languageManager.getMessage("game.moves") + moves);
+        this.failureChart.updateLanguage(failureTracker.getFails());
+    }
 }
