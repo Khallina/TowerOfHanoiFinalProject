@@ -5,9 +5,14 @@ import java.util.ArrayList;
 public class ProgressTracker {
     private List<TrialEntry> entries;
     private JTextArea ptrackerTextArea;
+    private LanguageManager languageManager;
+    private JFrame ptrackerFrame;
 
-    public ProgressTracker() {
+    public ProgressTracker(LanguageManager languageManager) {
         this.entries = new ArrayList<>();
+        this.languageManager = languageManager;
+        this.ptrackerFrame = new JFrame(languageManager.getMessage("progress.title"));
+
     }
 
     public void addProgress(int trialNumber, int clicks, long seconds, int fails) {
@@ -20,7 +25,7 @@ public class ProgressTracker {
     }
 
     public void displayProgressTracker() {
-        JFrame ptrackerFrame = new JFrame("Progress Tracker");
+
         ptrackerFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         ptrackerFrame.setSize(400, 300);
 
@@ -38,9 +43,18 @@ public class ProgressTracker {
     private void updateProgressTracker() {
         ptrackerTextArea.setText("");
         for (TrialEntry entry : this.getEntries()) {
-            ptrackerTextArea.append("Trial" + entry.getTrialNumber() + " - Time: " + entry.getSeconds() + "s, Moves: " + entry.getClicks() + ", Fails: "+ entry.getFails() +"\n");
+            ptrackerTextArea.append(languageManager.getMessage("progress.trial") + entry.getTrialNumber() + " - " +
+                    languageManager.getMessage("game.time")+ entry.getSeconds() + "s, " +
+                    languageManager.getMessage("game.moves") + entry.getClicks() + ", " +
+                    languageManager.getMessage("game.fails") + entry.getFails() +"\n");
         }
     }
+
+    public void setLanguageManager (LanguageManager languageManager) {
+        this.languageManager = languageManager;
+    }
+
+
 
 
 

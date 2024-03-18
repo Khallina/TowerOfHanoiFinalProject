@@ -27,6 +27,13 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
     private JCheckBox movesCheckbox;
     private int moveLimit = 81; // Move limit
     private int remainingMoves = moveLimit; // Remaining moves
+    private JButton progressTrackerButton;
+    private JPanel themePanel;
+    private JButton undoButton;
+    private JButton redoButton;
+    private Map<String, String> previousButtonMap = new HashMap<>(); // Store previous button texts
+    private JButton languageButton;
+
     public static void main(String[] args) {
         Instructions instructions;
         instructions = new Instructions();
@@ -77,29 +84,37 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         this.startTimer();
 
         //Undo and Redo Action Buttons
-        JButton undoButton = new JButton("Undo");
+        undoButton = new JButton(languageManager.getMessage("game.undo"));
         undoButton.addActionListener(e -> undoMove());
-        JButton redoButton = new JButton("Redo");
+        redoButton = new JButton(languageManager.getMessage("game.redo"));
         redoButton.addActionListener(e -> redoMove());
         JPanel undoredoPanel = new JPanel(new BorderLayout());
         undoredoPanel.add(undoButton, BorderLayout.WEST);
         undoredoPanel.add(redoButton, BorderLayout.EAST);
         add(undoredoPanel, BorderLayout.SOUTH);
 
-        JButton languageButton = new JButton("Language");
+        languageButton = new JButton("Language");
         languageButton.addActionListener(e -> openLanguageMenu());
         JPanel buttonPanel = new JPanel(new BorderLayout());
         buttonPanel.add(languageButton, BorderLayout.SOUTH);
         add(buttonPanel, BorderLayout.SOUTH);
 
-        JPanel themePanel = new JPanel();
-        String[] themeNames = {"Warm Colors", "Cool Colors", "Pastel Colors", "Rainbow"};
+        themePanel = new JPanel();
+        String warmText = languageManager.getMessage("color.warm");
+        String coolText = languageManager.getMessage("color.cool");
+        String pastelText = languageManager.getMessage("color.pastel");
+        String rainbowText = languageManager.getMessage("color.rainbow");
+        String[] themeNames = {warmText, coolText, pastelText, rainbowText};
         for (String themeName : themeNames) {
             JButton button = new JButton(themeName);
             button.addActionListener(e -> changeColorTheme(themeName));
             themePanel.add(button);
         }
         this.add(themePanel, BorderLayout.NORTH);
+        previousButtonMap.put("color.warm", warmText);
+        previousButtonMap.put("color.cool", coolText);
+        previousButtonMap.put("color.pastel", pastelText);
+        previousButtonMap.put("color.rainbow", rainbowText);
 
         failureTracker = new FailureTracker(0);
         failureChart = new FailureChart(10, 100, languageManager);
@@ -109,8 +124,8 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
 
         languageMenu = new LanguageMenu(this, languageManager);
 
-        progressTracker = new ProgressTracker();
-        JButton progressTrackerButton = new JButton("Progress Tracker");
+        progressTracker = new ProgressTracker(languageManager);
+        progressTrackerButton = new JButton(languageManager.getMessage("progress.title"));
         progressTrackerButton.addActionListener(e -> progressTracker.displayProgressTracker());
         JPanel progressPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         progressPanel.add(progressTrackerButton);
@@ -134,7 +149,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
                 // Check if 10 seconds have passed
                 if (elapsedTime >= 10 && !textShown) {
                     //timer.cancel(); // Stop the timer
-                    openHelperTool(); // Open the HelperTool window
+                    openHelperTool(languageManager); // Open the HelperTool window
                     textShown = true;
                 }
             }
@@ -266,8 +281,8 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
 
     @Override
     public void mouseExited(MouseEvent e) {}
-    private void openHelperTool() {
-        HelperTool helpertool = new HelperTool();
+    private void openHelperTool(LanguageManager languageManager) {
+        HelperTool helpertool = new HelperTool(languageManager);
         helpertool.open();
     }
     private void openLanguageMenu() {
@@ -287,7 +302,41 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         setTitle(languageManager.getMessage("game.title"));
         movesLabel.setText(languageManager.getMessage("game.moves") + moves);
         this.failureChart.updateLanguage(failureTracker.getFails());
-    }
+        this.progressTracker.setLanguageManager(languageManager);
+        progressTrackerButton.setText(languageManager.getMessage("progress.title")); // Update button text
+
+        // Update theme panel buttons text
+
+        Component[] components = themePanel.getComponents();
+        for (Component component : components) {
+            if (component instanceof JButton) {
+                JButton button = (JButton) component;
+                String buttonText = button.getText();
+                if (buttonText.equals(previousButtonMap.get("color.warm"))) {
+                    button.setText(languageManager.getMessage("color.warm"));
+                    previousButtonMap.remove("color.warm");
+                    previousButtonMap.put("color.warm", languageManager.getMessage("color.warm"));
+                } else if (buttonText.equals(previousButtonMap.get("color.cool"))) {
+                    button.setText(languageManager.getMessage("color.cool"));
+                    previousButtonMap.remove("color.cool");
+                    previousButtonMap.put("color.cool", languageManager.getMessage("color.cool"));
+                } else if (buttonText.equals(previousButtonMap.get("color.pastel"))) {
+                    button.setText(languageManager.getMessage("color.pastel"));
+                    previousButtonMap.remove("color.pastel");
+                    previousButtonMap.put("color.pastel", languageManager.getMessage("color.pastel"));
+                } else if (buttonText.equals(previousButtonMap.get("color.rainbow"))) {
+                    button.setText(languageManager.getMessage("color.rainbow"));
+                    previousButtonMap.remove("color.rainbow");
+                    previousButtonMap.put("color.rainbow", languageManager.getMessage("color.rainbow"));
+                }
+            }
+        }
+        undoButton.setText(languageManager.getMessage("game.undo"));
+        redoButton.setText(languageManager.getMessage("game.redo"));
+        movesCheckbox.setText(languageManager.getMessage("game.limited"));
+        languageButton.setText(languageManager.getMessage("game.lang"));
+
+}
     //the move class is used for undo and redo actions
     private class Move {
         private int fromPegIndex;
@@ -323,7 +372,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
             moves--;
             if (movesCheckbox.isSelected()) {
                 remainingMoves--;
-                movesLabel.setText("Moves: " + remainingMoves);
+                movesLabel.setText(languageManager.getMessage("game.moves") + remainingMoves);
             }
             else {
                 movesLabel.setText(languageManager.getMessage("game.moves") + moves);
@@ -340,7 +389,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
             moves++;
             if (movesCheckbox.isSelected()) {
                 remainingMoves++;
-                movesLabel.setText("Moves: " + remainingMoves);
+                movesLabel.setText(languageManager.getMessage("game.moves")+ remainingMoves);
             }
             else {
                 movesLabel.setText(languageManager.getMessage("game.moves") + moves);
