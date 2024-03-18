@@ -20,10 +20,13 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
     private LanguageManager languageManager;
     private ProgressTracker progressTracker;
 
+
     private Stack<Move> undoStack = new Stack<>();
     private Stack<Move> redoStack = new Stack<>();
     private boolean textShown = false;
-
+    private JCheckBox movesCheckbox;
+    private int moveLimit = 81; // Move limit
+    private int remainingMoves = moveLimit; // Remaining moves
     public static void main(String[] args) {
         Instructions instructions;
         instructions = new Instructions();
@@ -50,6 +53,17 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         pegs[2] = new Peg(600, 100, 20, 250);
 
         this.initializeDisks();
+
+        this.movesCheckbox = new JCheckBox("Limited Moves");
+        movesCheckbox.addActionListener(e -> {
+            if (movesCheckbox.isSelected()) {
+                // Start the moves countdown
+                movesLabel.setText("Moves: " + remainingMoves);
+            } else {
+                // Stop the moves countdown
+                movesLabel.setText("Moves: " + moves);            }
+        });
+        this.add(movesCheckbox);
 
         this.movesLabel = new JLabel(languageManager.getMessage("game.moves") + moves);
         this.movesLabel.setBounds(50, 50, 100, 20);
@@ -195,6 +209,23 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
                                     moves++;
                                     movesLabel.setText(languageManager.getMessage("game.moves") + moves);
                                     undoStack.push(new Move(index, nextPegIndex, topDisk)); //push move to undo stack
+                                    //keep track of remaining moves if limited move mode is active
+                                    if (movesCheckbox.isSelected()) {
+                                        remainingMoves--;
+                                        movesLabel.setText("Moves: " + remainingMoves);
+
+                                        if (remainingMoves <= 0) {
+                                            //game end in failure
+                                            timer.cancel();
+                                            progressTracker.addProgress(index, moves, (System.currentTimeMillis() - startTime) / 1000, failureTracker.getFails());
+                                            JOptionPane.showMessageDialog(null,
+                                                    languageManager.getMessage("game.congratulations") + "\n" +
+                                                            languageManager.getMessage("game.fails") + failureTracker.getFails() + "\n" +
+                                                            languageManager.getMessage("game.time") + (System.currentTimeMillis() - startTime) / 1000 + "\n" +
+                                                            languageManager.getMessage("game.moves")+ moves);
+                                        }
+                                    }
+
                                     animationTimer.cancel();
                                     repaint();
                                     if (nextPegIndex == 2 && nextPeg.getDiskCount() == 6) {
@@ -290,7 +321,13 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
             move.undoMove();
             redoStack.push(move);
             moves--;
-            movesLabel.setText(languageManager.getMessage("game.moves") + moves);
+            if (movesCheckbox.isSelected()) {
+                remainingMoves--;
+                movesLabel.setText("Moves: " + remainingMoves);
+            }
+            else {
+                movesLabel.setText(languageManager.getMessage("game.moves") + moves);
+            }
             repaint();
         }
     }
@@ -301,7 +338,13 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
             move.redoMove();
             undoStack.push(move);
             moves++;
-            movesLabel.setText(languageManager.getMessage("game.moves") + moves);
+            if (movesCheckbox.isSelected()) {
+                remainingMoves++;
+                movesLabel.setText("Moves: " + remainingMoves);
+            }
+            else {
+                movesLabel.setText(languageManager.getMessage("game.moves") + moves);
+            }
             repaint();
         }
     }
