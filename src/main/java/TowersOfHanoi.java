@@ -32,6 +32,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
     private JButton undoButton;
     private JButton redoButton;
     private Map<String, String> previousButtonMap = new HashMap<>(); // Store previous button texts
+    private JButton languageButton;
 
     public static void main(String[] args) {
         Instructions instructions;
@@ -92,7 +93,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         undoredoPanel.add(redoButton, BorderLayout.EAST);
         add(undoredoPanel, BorderLayout.SOUTH);
 
-        JButton languageButton = new JButton("Language");
+        languageButton = new JButton("Language");
         languageButton.addActionListener(e -> openLanguageMenu());
         JPanel buttonPanel = new JPanel(new BorderLayout());
         buttonPanel.add(languageButton, BorderLayout.SOUTH);
@@ -333,6 +334,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         undoButton.setText(languageManager.getMessage("game.undo"));
         redoButton.setText(languageManager.getMessage("game.redo"));
         movesCheckbox.setText(languageManager.getMessage("game.limited"));
+        languageButton.setText(languageManager.getMessage("game.lang"));
 
 }
     //the move class is used for undo and redo actions

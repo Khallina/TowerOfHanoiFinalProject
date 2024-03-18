@@ -18,7 +18,7 @@ public class LanguageMenu extends JDialog {
         selectLabel.setBounds(20, 20, 120, 25);
         add(selectLabel);
 
-        String[] languages = {"English", "Japanese", "Spanish", "French", "Korean"};
+        String[] languages = {"English", "Italian", "Spanish", "French", "Portuguese"};
         languageComboBox = new JComboBox<>(languages);
         languageComboBox.setBounds(150, 20, 120, 25);
         add(languageComboBox);
@@ -40,8 +40,8 @@ public class LanguageMenu extends JDialog {
             case 0: // English
                 language.setLocale(Locale.ENGLISH);
                 break;
-            case 1: // Japanese
-                language.setLocale(Locale.JAPANESE);
+            case 1: // Italian
+                language.setLocale(Locale.ITALIAN);
                 break;
             case 2: // Spanish
                 language.setLocale(new Locale("es", "ES"));
@@ -49,8 +49,8 @@ public class LanguageMenu extends JDialog {
             case 3: // French
                 language.setLocale(Locale.FRENCH);
                 break;
-            case 4: // Korean
-                language.setLocale(Locale.KOREAN);
+            case 4: // Portuguese
+                language.setLocale(new Locale("pt", "BR"));
                 break;
             default:
                 break;
