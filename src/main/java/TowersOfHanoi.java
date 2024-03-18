@@ -1,10 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.Timer;
-import java.util.TimerTask;
 
 public class TowersOfHanoi extends JFrame implements MouseListener {
     private Peg[] pegs = new Peg[3];
@@ -21,6 +19,9 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
     private LanguageMenu languageMenu;
     private LanguageManager languageManager;
     private ProgressTracker progressTracker;
+
+    private Stack<Move> undoStack = new Stack<>();
+    private Stack<Move> redoStack = new Stack<>();
     private boolean textShown = false;
 
     public static void main(String[] args) {
@@ -60,6 +61,16 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
 
         this.startTime = System.currentTimeMillis();
         this.startTimer();
+
+        //Undo and Redo Action Buttons
+        JButton undoButton = new JButton("Undo");
+        undoButton.addActionListener(e -> undoMove());
+        JButton redoButton = new JButton("Redo");
+        redoButton.addActionListener(e -> redoMove());
+        JPanel undoredoPanel = new JPanel(new BorderLayout());
+        undoredoPanel.add(undoButton, BorderLayout.WEST);
+        undoredoPanel.add(redoButton, BorderLayout.EAST);
+        add(undoredoPanel, BorderLayout.SOUTH);
 
         JButton languageButton = new JButton("Language");
         languageButton.addActionListener(e -> openLanguageMenu());
@@ -183,6 +194,7 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
                                     nextPeg.addDisk(topDisk);
                                     moves++;
                                     movesLabel.setText(languageManager.getMessage("game.moves") + moves);
+                                    undoStack.push(new Move(index, nextPegIndex, topDisk)); //push move to undo stack
                                     animationTimer.cancel();
                                     repaint();
                                     if (nextPegIndex == 2 && nextPeg.getDiskCount() == 6) {
@@ -244,5 +256,53 @@ public class TowersOfHanoi extends JFrame implements MouseListener {
         setTitle(languageManager.getMessage("game.title"));
         movesLabel.setText(languageManager.getMessage("game.moves") + moves);
         this.failureChart.updateLanguage(failureTracker.getFails());
+    }
+    //the move class is used for undo and redo actions
+    private class Move {
+        private int fromPegIndex;
+        private int toPegIndex;
+        private Disk disk;
+
+        public Move(int fromPegIndex, int toPegIndex, Disk disk) {
+            this.fromPegIndex = fromPegIndex;
+            this.toPegIndex = toPegIndex;
+            this.disk = disk;
+        }
+
+        public void undoMove() {
+            Peg fromPeg = pegs[fromPegIndex];
+            Peg toPeg = pegs[toPegIndex];
+            fromPeg.addDisk(disk);
+            toPeg.removeTopDisk();
+        }
+
+        public void redoMove() {
+            Peg fromPeg = pegs[fromPegIndex];
+            Peg toPeg = pegs[toPegIndex];
+            fromPeg.removeTopDisk();
+            toPeg.addDisk(disk);
+        }
+    }
+    //methods used to push moves onto undo and redo stack
+    private void undoMove() {
+        if (!undoStack.isEmpty()) {
+            Move move = undoStack.pop();
+            move.undoMove();
+            redoStack.push(move);
+            moves--;
+            movesLabel.setText(languageManager.getMessage("game.moves") + moves);
+            repaint();
+        }
+    }
+
+    private void redoMove() {
+        if (!redoStack.isEmpty()) {
+            Move move = redoStack.pop();
+            move.redoMove();
+            undoStack.push(move);
+            moves++;
+            movesLabel.setText(languageManager.getMessage("game.moves") + moves);
+            repaint();
+        }
     }
 }
