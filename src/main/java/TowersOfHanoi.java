@@ -4,6 +4,14 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.Timer;
 
+//Team Members:
+//Fiona Karen Chin
+//Ryan Pascual Tolentino
+//Adya Choudhary
+//Safwan Muntasir
+//Yud Wong
+//Katie Hallinan
+
 public class TowersOfHanoi extends JFrame implements MouseListener {
     private Peg[] pegs = new Peg[3];
     private int moves = 0;
